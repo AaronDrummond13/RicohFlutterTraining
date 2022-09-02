@@ -3,22 +3,23 @@ import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 import 'package:path/path.dart';
 
-import '../images.dart';
+import '../models/images.dart';
 
 class SembastDB {
   DatabaseFactory dbFactory = databaseFactoryIo;
   late Database _db;
   final store = intMapStoreFactory.store('images');
-  static final SembastDB _singleton = SembastDB.interal();
+  static SembastDB? _instance;
 
   SembastDB.interal();
 
   factory SembastDB() {
-    return _singleton;
+    return _instance ??= SembastDB.interal();
   }
 
   Future<Database> init() async {
-    return _db ??= await _openDb();
+    _db = await _openDb();
+    return _db;
   }
 
   Future _openDb() async {
@@ -33,7 +34,7 @@ class SembastDB {
     return id;
   }
 
-  Future getImages() async {
+  Future<List<Images>> getImages() async {
     await init();
     final finder = Finder(sortOrders: [SortOrder('name')]);
     final snapshot = await store.find(_db, finder: finder);
