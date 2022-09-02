@@ -7,7 +7,7 @@ import '../images.dart';
 
 class SembastDB {
   DatabaseFactory dbFactory = databaseFactoryIo;
-  Database? _db;
+  late Database _db;
   final store = intMapStoreFactory.store('images');
   static final SembastDB _singleton = SembastDB.interal();
 
@@ -29,10 +29,32 @@ class SembastDB {
   }
 
   Future<int> addImages(Images images) async {
-    if (_db == null) {
-      //throw database is null error
-    }
-    int id = await store.add(_db!, images.toMap());
+    int id = await store.add(_db, images.toMap());
     return id;
+  }
+
+  Future getImages() async {
+    await init();
+    final finder = Finder(sortOrders: [SortOrder('name')]);
+    final snapshot = await store.find(_db, finder: finder);
+    return snapshot.map((item) {
+      final images = Images.fromMap(item.value);
+      images.id = item.key;
+      return images;
+    }).toList();
+  }
+
+  Future updateImages(Images images) async {
+    final finder = Finder(filter: Filter.byKey(images.id));
+    await store.update(_db, images.toMap(), finder: finder);
+  }
+
+  Future deleteImages(Images images) async {
+    final finder = Finder(filter: Filter.byKey(images.id));
+    await store.delete(_db, finder: finder);
+  }
+
+  Future deleteAll() async {
+    await store.delete(_db);
   }
 }
